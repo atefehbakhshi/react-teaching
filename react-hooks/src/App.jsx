@@ -1,5 +1,7 @@
-import { useEffect, useReducer, useState } from "react";
+import { createContext, useEffect, useReducer, useState } from "react";
 import "./App.css";
+import AddButton from "./components/buttons";
+import List from "./components/list";
 
 const list = JSON.parse(localStorage.getItem("myList")) || [];
 
@@ -20,6 +22,10 @@ const reducerFn = (state, action) => {
   }
 };
 
+export const ListContext = createContext({
+  deleteHandler: () => {},
+});
+
 function App() {
   const [myList, dispatch] = useReducer(reducerFn, list);
   const [name, setName] = useState("");
@@ -28,33 +34,26 @@ function App() {
     localStorage.setItem("myList", JSON.stringify(myList));
   }, [myList]);
 
+  const deleteHandler = (item) => {
+    dispatch({ type: "remove", payload: item });
+  };
+
+  const addHandler = (name) => {
+    dispatch({ type: "add", payload: name });
+  };
+
   return (
-    <div className="container">
-      <input
-        type="text"
-        placeholder="Add Task"
-        onChange={(e) => setName(e.target.value)}
-      />
-      <button
-        className="add-button"
-        onClick={() => dispatch({ type: "add", payload: name })}
-      >
-        Add me
-      </button>
-      <ul>
-        {myList.map((item) => (
-          <li key={item}>
-            <p>{item}</p>
-            <button
-              className="delete-button"
-              onClick={() => dispatch({ type: "remove", payload: item })}
-            >
-              -
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ListContext.Provider value={{ deleteHandler, addHandler, name }}>
+      <div className="container">
+        <input
+          type="text"
+          placeholder="Add Task"
+          onChange={(e) => setName(e.target.value)}
+        />
+        <AddButton />
+        <List myList={myList} />
+      </div>
+    </ListContext.Provider>
   );
 }
 
